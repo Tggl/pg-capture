@@ -122,7 +122,7 @@ export class QueryBuilder<T = unknown> {
     let index = 1;
 
     for (const [identifier, value] of Object.entries(bindings)) {
-      result.text = result.text.replaceAll(identifier, `${index++}`);
+      result.text = result.text.replaceAll(identifier, `$${index++}`);
       result.values?.push(value);
     }
 

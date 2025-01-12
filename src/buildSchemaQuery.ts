@@ -18,7 +18,7 @@ const buildQuery = ({
 }: {
   tableAliasCache?: TableAliasCache;
   table: string;
-  ids?: string[];
+  ids?: unknown[];
   identifierColumn: string;
   group?: boolean;
   schema: Schema;
@@ -128,7 +128,7 @@ const buildQuery = ({
  */
 export const buildSchemaQuery = (
   schema: RootSchema,
-  ids: string[],
+  ids: unknown[],
 ): QueryBuilder<{id: string; record: unknown}> => {
   return buildQuery({
     table: schema.table,
