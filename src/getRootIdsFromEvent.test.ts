@@ -1,10 +1,10 @@
-import {listDependencies} from './listDependencies';
+import {getRootIdsFromEvent} from './getRootIdsFromEvent';
 import {QueryBuilder} from './QueryBuilder';
 import {expectQuery} from './test/helpers';
 
 test('unknown schema type', () => {
   expect(() =>
-    listDependencies(
+    getRootIdsFromEvent(
       {
         table: 'user',
         primaryKey: 'id',
@@ -24,7 +24,7 @@ test('unknown schema type', () => {
 
 test('self insert', () => {
   expect(
-    listDependencies(
+    getRootIdsFromEvent(
       {
         table: 'user',
         primaryKey: 'id',
@@ -45,7 +45,7 @@ test('self insert', () => {
 
 test('self update', () => {
   expect(
-    listDependencies(
+    getRootIdsFromEvent(
       {
         table: 'user',
         primaryKey: 'id',
@@ -66,7 +66,7 @@ test('self update', () => {
 
 test('self update multiple columns', () => {
   expect(
-    listDependencies(
+    getRootIdsFromEvent(
       {
         table: 'user',
         primaryKey: 'id',
@@ -96,7 +96,7 @@ test('self update multiple columns', () => {
 
 test('unconventional primary key self update', () => {
   expect(
-    listDependencies(
+    getRootIdsFromEvent(
       {
         table: 'user',
         primaryKey: 'email',
@@ -117,7 +117,7 @@ test('unconventional primary key self update', () => {
 
 test('self update primary key', () => {
   expect(
-    listDependencies(
+    getRootIdsFromEvent(
       {
         table: 'user',
         primaryKey: 'id',
@@ -138,7 +138,7 @@ test('self update primary key', () => {
 
 test('self update not updating interesting column', () => {
   expect(
-    listDependencies(
+    getRootIdsFromEvent(
       {
         table: 'user',
         primaryKey: 'id',
@@ -159,7 +159,7 @@ test('self update not updating interesting column', () => {
 
 test('self delete', () => {
   expect(
-    listDependencies(
+    getRootIdsFromEvent(
       {
         table: 'user',
         primaryKey: 'id',
@@ -180,7 +180,7 @@ test('self delete', () => {
 
 test('many-to-one insert', () => {
   expect(
-    listDependencies(
+    getRootIdsFromEvent(
       {
         table: 'article',
         primaryKey: 'id',
@@ -207,7 +207,7 @@ test('many-to-one insert', () => {
 });
 
 test('many-to-one insert, no constraint', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',
@@ -241,7 +241,7 @@ test('many-to-one insert, no constraint', () => {
 });
 
 test('many-to-one insert, random table', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',
@@ -268,7 +268,7 @@ test('many-to-one insert, random table', () => {
 });
 
 test('many-to-one insert, no constraint, same PK', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -296,7 +296,7 @@ test('many-to-one insert, no constraint, same PK', () => {
 
 test('many-to-one delete', () => {
   expect(
-    listDependencies(
+    getRootIdsFromEvent(
       {
         table: 'article',
         primaryKey: 'id',
@@ -323,7 +323,7 @@ test('many-to-one delete', () => {
 });
 
 test('many-to-one delete, no constraint', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',
@@ -357,7 +357,7 @@ test('many-to-one delete, no constraint', () => {
 });
 
 test('many-to-one delete, random table', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',
@@ -384,7 +384,7 @@ test('many-to-one delete, random table', () => {
 });
 
 test('many-to-one delete, no constraint, same PK', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -411,7 +411,7 @@ test('many-to-one delete, no constraint, same PK', () => {
 });
 
 test('many-to-one update', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',
@@ -445,7 +445,7 @@ test('many-to-one update', () => {
 });
 
 test('nested many-to-one update', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',
@@ -487,7 +487,7 @@ test('nested many-to-one update', () => {
 });
 
 test('double nested many-to-one update', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'comment',
       primaryKey: 'id',
@@ -537,7 +537,7 @@ test('double nested many-to-one update', () => {
 });
 
 test('many-to-oneupdate, random table', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',
@@ -564,7 +564,7 @@ test('many-to-oneupdate, random table', () => {
 });
 
 test('many-to-oneupdate, same PK', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -591,7 +591,7 @@ test('many-to-oneupdate, same PK', () => {
 });
 
 test('many-to-one update primary key', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',
@@ -618,7 +618,7 @@ test('many-to-one update primary key', () => {
 });
 
 test('many-to-one update primary key, no constraint', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',
@@ -652,7 +652,7 @@ test('many-to-one update primary key, no constraint', () => {
 });
 
 test('many-to-one update, no interesting column', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',
@@ -679,7 +679,7 @@ test('many-to-one update, no interesting column', () => {
 });
 
 test('many-to-one update, no FK constraint', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',
@@ -713,7 +713,7 @@ test('many-to-one update, no FK constraint', () => {
 });
 
 test('insert referencing table top level', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -739,7 +739,7 @@ test('insert referencing table top level', () => {
 });
 
 test('nested insert referencing table', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -778,7 +778,7 @@ test('nested insert referencing table', () => {
 });
 
 test('double nested insert referencing table', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'organization',
       primaryKey: 'id',
@@ -824,7 +824,7 @@ test('double nested insert referencing table', () => {
 });
 
 test('insert referencing table top level, non PK', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -857,7 +857,7 @@ test('insert referencing table top level, non PK', () => {
 });
 
 test('insert referencing table, random table', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -883,7 +883,7 @@ test('insert referencing table, random table', () => {
 });
 
 test('delete referencing table top level', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -909,7 +909,7 @@ test('delete referencing table top level', () => {
 });
 
 test('delete referencing table top level, non PK', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -942,7 +942,7 @@ test('delete referencing table top level, non PK', () => {
 });
 
 test('delete referencing table, random table', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -968,7 +968,7 @@ test('delete referencing table, random table', () => {
 });
 
 test('update referencing table top level', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -994,7 +994,7 @@ test('update referencing table top level', () => {
 });
 
 test('update referencing table top level foreign key', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -1020,7 +1020,7 @@ test('update referencing table top level foreign key', () => {
 });
 
 test('update referencing table top level uninteresting column', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -1046,7 +1046,7 @@ test('update referencing table top level uninteresting column', () => {
 });
 
 test('update referencing table top level, non PK', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -1079,7 +1079,7 @@ test('update referencing table top level, non PK', () => {
 });
 
 test('update referencing table top level, non PK, referencing column', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -1112,7 +1112,7 @@ test('update referencing table top level, non PK, referencing column', () => {
 });
 
 test('nested many-to-one one-to-many', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -1152,7 +1152,7 @@ test('nested many-to-one one-to-many', () => {
 });
 
 test('double nested many-to-one one-to-many', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'comment',
       primaryKey: 'id',
@@ -1200,7 +1200,7 @@ test('double nested many-to-one one-to-many', () => {
 });
 
 test('triple nested many-to-one one-to-many', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'comment',
       primaryKey: 'id',
@@ -1255,7 +1255,7 @@ test('triple nested many-to-one one-to-many', () => {
 });
 
 test('triple nested many-to-one one-to-many with object', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'comment',
       primaryKey: 'id',
@@ -1319,7 +1319,7 @@ test('triple nested many-to-one one-to-many with object', () => {
 });
 
 test('triple nested many-to-one one-to-many with object update', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'comment',
       primaryKey: 'id',
@@ -1382,7 +1382,7 @@ test('triple nested many-to-one one-to-many with object update', () => {
 });
 
 test('nested many-to-one one-to-many, skip middle table', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -1416,7 +1416,7 @@ test('nested many-to-one one-to-many, skip middle table', () => {
 });
 
 test('nested one-to-many many-to-one', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -1456,7 +1456,7 @@ test('nested one-to-many many-to-one', () => {
 });
 
 test('both direct and indirect', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'user',
       primaryKey: 'id',
@@ -1505,7 +1505,7 @@ test('both direct and indirect', () => {
 });
 
 test('multiple queries', () => {
-  const result = listDependencies(
+  const result = getRootIdsFromEvent(
     {
       table: 'article',
       primaryKey: 'id',

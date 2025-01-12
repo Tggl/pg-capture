@@ -1,9 +1,9 @@
 import {expectQuery} from './test/helpers';
-import {buildObjects} from './buildObjects';
+import {buildSchemaQuery} from './buildSchemaQuery';
 
 test('unknown type', () => {
   expect(() =>
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'user',
         primaryKey: 'id',
@@ -18,7 +18,7 @@ test('unknown type', () => {
 
 test('column', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'user',
         primaryKey: 'id',
@@ -37,7 +37,7 @@ test('column', () => {
 
 test('object', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'user',
         primaryKey: 'id',
@@ -65,7 +65,7 @@ test('object', () => {
 
 test('foreignKey', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'article',
         primaryKey: 'id',
@@ -95,7 +95,7 @@ test('foreignKey', () => {
 
 test('multiple foreignKey', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'article',
         primaryKey: 'id',
@@ -146,7 +146,7 @@ test('multiple foreignKey', () => {
 
 test('nested foreignKey', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'article',
         primaryKey: 'id',
@@ -187,7 +187,7 @@ test('nested foreignKey', () => {
 
 test('referencing table', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'article',
         primaryKey: 'id',
@@ -217,7 +217,7 @@ test('referencing table', () => {
 
 test('double referencing table', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'article',
         primaryKey: 'id',
@@ -272,7 +272,7 @@ test('double referencing table', () => {
 
 test('nested referencing table', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'user',
         primaryKey: 'id',
@@ -317,7 +317,7 @@ test('nested referencing table', () => {
 
 test('same table multiple times', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'user',
         primaryKey: 'id',
@@ -358,7 +358,7 @@ test('same table multiple times', () => {
 
 test('skip middle table', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'user',
         primaryKey: 'id',
@@ -397,7 +397,7 @@ test('skip middle table', () => {
 
 test('do not skip middle table if not same column', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'user',
         primaryKey: 'id',
@@ -440,7 +440,7 @@ test('do not skip middle table if not same column', () => {
 
 test('do not skip middle table if read', () => {
   expectQuery(
-    buildObjects(
+    buildSchemaQuery(
       {
         table: 'user',
         primaryKey: 'id',

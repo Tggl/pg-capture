@@ -25,7 +25,7 @@ const overlaps = (a: string[], b: string[]) => {
   return a.some(value => b.includes(value));
 };
 
-export const listDependencies = (
+export const getRootIdsFromEvent = (
   rootSchema: RootSchema,
   event: WALEvent,
 ): Dependencies => {

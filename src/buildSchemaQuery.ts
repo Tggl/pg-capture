@@ -126,7 +126,7 @@ const buildQuery = ({
 /**
  * Given a schema and a list of ids, build a query that returns the objects.
  */
-export const buildObjects = (
+export const buildSchemaQuery = (
   schema: RootSchema,
   ids: string[],
 ): QueryBuilder<{id: string; record: unknown}> => {
