@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "lint": "gts lint",
-    "clean": "gts clean",
+    "clean": "gts clean && rm tsconfig.tsbuildinfo",
     "compile": "tsc",
     "fix": "gts fix",
     "prepare": "npm run compile",
