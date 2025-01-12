@@ -10,8 +10,8 @@ export type ObjectSchema = {
   properties: Record<string, Schema>;
 };
 
-export type ForeignKeySchema = {
-  type: 'foreign-key';
+export type ManyToOneSchema = {
+  type: 'many-to-one';
   column: string;
   referencesTable: string;
   referencesColumn: string;
@@ -19,8 +19,8 @@ export type ForeignKeySchema = {
   schema: Schema;
 };
 
-export type ReferencingTableSchema = {
-  type: 'referencing-table';
+export type OneToManySchema = {
+  type: 'one-to-many';
   column: string;
   referencingTable: string;
   referencingColumn: string;
@@ -30,8 +30,8 @@ export type ReferencingTableSchema = {
 export type Schema =
   | ColumnSchema
   | ObjectSchema
-  | ForeignKeySchema
-  | ReferencingTableSchema;
+  | ManyToOneSchema
+  | OneToManySchema;
 
 export type RootSchema = {
   table: string;

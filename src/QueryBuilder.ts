@@ -1,4 +1,4 @@
-import {QueryConfig} from 'pg';
+import type {QueryConfig} from 'pg';
 import {randomBytes} from 'crypto';
 
 export class QueryBuilder<T = unknown> {

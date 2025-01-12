@@ -8,7 +8,7 @@ const postgresJsonBuildObject = (entries: {key: string; value: string}[]) => {
     .join(', ')})`;
 };
 
-const buildJsonObject = ({
+const buildQuery = ({
   tableAliasCache = new TableAliasCache(),
   table,
   ids,
@@ -34,13 +34,13 @@ const buildJsonObject = ({
       return `"${tableAlias}"."${schema.column}"`;
     }
 
-    if (schema.type === 'foreign-key') {
+    if (schema.type === 'many-to-one') {
       if (
-        schema.schema.type === 'referencing-table' &&
+        schema.schema.type === 'one-to-many' &&
         schema.schema.column === schema.referencesColumn
       ) {
         const subQueryId = query.subQuery(
-          buildJsonObject({
+          buildQuery({
             tableAliasCache: tableAliasCache,
             table: schema.schema.referencingTable,
             identifierColumn: schema.schema.referencingColumn,
@@ -58,7 +58,7 @@ const buildJsonObject = ({
         return `COALESCE("${alias}"."object", '[]'::json)`;
       } else {
         const subQueryId = query.subQuery(
-          buildJsonObject({
+          buildQuery({
             tableAliasCache: tableAliasCache,
             table: schema.referencesTable,
             identifierColumn: schema.referencesColumn,
@@ -76,9 +76,9 @@ const buildJsonObject = ({
       }
     }
 
-    if (schema.type === 'referencing-table') {
+    if (schema.type === 'one-to-many') {
       const subQueryId = query.subQuery(
-        buildJsonObject({
+        buildQuery({
           tableAliasCache: tableAliasCache,
           table: schema.referencingTable,
           schema: schema.schema,
@@ -106,7 +106,7 @@ const buildJsonObject = ({
       );
     }
 
-    return '';
+    throw new Error('Unknown schema type');
   };
 
   const select = getDefinition(schema);
@@ -130,7 +130,7 @@ export const buildObjects = (
   schema: RootSchema,
   ids: string[],
 ): QueryBuilder<{id: string; record: unknown}> => {
-  return buildJsonObject({
+  return buildQuery({
     table: schema.table,
     identifierColumn: schema.primaryKey,
     ids,

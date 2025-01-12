@@ -1,6 +1,26 @@
 import {listDependencies} from './listDependencies';
 import {QueryBuilder} from './QueryBuilder';
-import {expectQuery} from './helpers.test';
+import {expectQuery} from './test/helpers';
+
+test('unknown schema type', () => {
+  expect(() =>
+    listDependencies(
+      {
+        table: 'user',
+        primaryKey: 'id',
+        schema: {
+          type: 'foo',
+        },
+      } as any,
+      {
+        table: 'user',
+        action: 'UPDATE',
+        data: {id: 'foo'},
+        dataOld: {id: 'bar'},
+      },
+    ),
+  ).toThrow('Unknown schema type');
+});
 
 test('self insert', () => {
   expect(
@@ -158,14 +178,14 @@ test('self delete', () => {
   ).toEqual({ids: ['foo'], query: null});
 });
 
-test('foreignKey insert', () => {
+test('many-to-one insert', () => {
   expect(
     listDependencies(
       {
         table: 'article',
         primaryKey: 'id',
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'authorId',
           referencesColumn: 'id',
           referencesTable: 'user',
@@ -186,13 +206,13 @@ test('foreignKey insert', () => {
   ).toEqual({ids: [], query: null});
 });
 
-test('foreignKey insert, no constraint', () => {
+test('many-to-one insert, no constraint', () => {
   const result = listDependencies(
     {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
@@ -220,13 +240,13 @@ test('foreignKey insert, no constraint', () => {
   );
 });
 
-test('foreignKey insert, random table', () => {
+test('many-to-one insert, random table', () => {
   const result = listDependencies(
     {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
@@ -247,13 +267,13 @@ test('foreignKey insert, random table', () => {
   expect(result).toEqual({ids: [], query: null});
 });
 
-test('foreignKey insert, no constraint, same PK', () => {
+test('many-to-one insert, no constraint, same PK', () => {
   const result = listDependencies(
     {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'id',
         referencesColumn: 'userId',
         referencesTable: 'user_phone',
@@ -274,14 +294,14 @@ test('foreignKey insert, no constraint, same PK', () => {
   expect(result).toEqual({ids: ['foo'], query: null});
 });
 
-test('foreignKey delete', () => {
+test('many-to-one delete', () => {
   expect(
     listDependencies(
       {
         table: 'article',
         primaryKey: 'id',
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'authorId',
           referencesColumn: 'id',
           referencesTable: 'user',
@@ -302,13 +322,13 @@ test('foreignKey delete', () => {
   ).toEqual({ids: [], query: null});
 });
 
-test('foreignKey delete, no constraint', () => {
+test('many-to-one delete, no constraint', () => {
   const result = listDependencies(
     {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
@@ -336,13 +356,13 @@ test('foreignKey delete, no constraint', () => {
   );
 });
 
-test('foreignKey delete, random table', () => {
+test('many-to-one delete, random table', () => {
   const result = listDependencies(
     {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
@@ -363,13 +383,13 @@ test('foreignKey delete, random table', () => {
   expect(result).toEqual({ids: [], query: null});
 });
 
-test('foreignKey delete, no constraint, same PK', () => {
+test('many-to-one delete, no constraint, same PK', () => {
   const result = listDependencies(
     {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'id',
         referencesColumn: 'userId',
         referencesTable: 'user_phone',
@@ -390,13 +410,13 @@ test('foreignKey delete, no constraint, same PK', () => {
   expect(result).toEqual({ids: ['foo'], query: null});
 });
 
-test('foreignKey update', () => {
+test('many-to-one update', () => {
   const result = listDependencies(
     {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
@@ -424,19 +444,19 @@ test('foreignKey update', () => {
   );
 });
 
-test('nested foreignKey update', () => {
+test('nested many-to-one update', () => {
   const result = listDependencies(
     {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
         hasFKConstraint: true,
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'organizationId',
           referencesColumn: 'id',
           referencesTable: 'organization',
@@ -466,25 +486,25 @@ test('nested foreignKey update', () => {
   );
 });
 
-test('double nested foreignKey update', () => {
+test('double nested many-to-one update', () => {
   const result = listDependencies(
     {
       table: 'comment',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'articleId',
         referencesColumn: 'id',
         referencesTable: 'article',
         hasFKConstraint: true,
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'authorId',
           referencesColumn: 'id',
           referencesTable: 'user',
           hasFKConstraint: true,
           schema: {
-            type: 'foreign-key',
+            type: 'many-to-one',
             column: 'organizationId',
             referencesColumn: 'id',
             referencesTable: 'organization',
@@ -516,13 +536,13 @@ test('double nested foreignKey update', () => {
   );
 });
 
-test('foreignKey update, random table', () => {
+test('many-to-oneupdate, random table', () => {
   const result = listDependencies(
     {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
@@ -543,13 +563,13 @@ test('foreignKey update, random table', () => {
   expect(result).toEqual({ids: [], query: null});
 });
 
-test('foreignKey update, same PK', () => {
+test('many-to-oneupdate, same PK', () => {
   const result = listDependencies(
     {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'id',
         referencesColumn: 'userId',
         referencesTable: 'user_phone',
@@ -570,13 +590,13 @@ test('foreignKey update, same PK', () => {
   expect(result).toEqual({ids: ['foo'], query: null});
 });
 
-test('foreignKey update primary key', () => {
+test('many-to-one update primary key', () => {
   const result = listDependencies(
     {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
@@ -597,13 +617,13 @@ test('foreignKey update primary key', () => {
   expect(result).toEqual({ids: [], query: null});
 });
 
-test('foreignKey update primary key, no constraint', () => {
+test('many-to-one update primary key, no constraint', () => {
   const result = listDependencies(
     {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
@@ -631,13 +651,13 @@ test('foreignKey update primary key, no constraint', () => {
   );
 });
 
-test('foreignKey update, no interesting column', () => {
+test('many-to-one update, no interesting column', () => {
   const result = listDependencies(
     {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
@@ -658,13 +678,13 @@ test('foreignKey update, no interesting column', () => {
   expect(result).toEqual({ids: [], query: null});
 });
 
-test('foreignKey update, no FK constraint', () => {
+test('many-to-one update, no FK constraint', () => {
   const result = listDependencies(
     {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
@@ -698,7 +718,7 @@ test('insert referencing table top level', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'id',
         referencingTable: 'article',
         referencingColumn: 'authorId',
@@ -724,12 +744,12 @@ test('nested insert referencing table', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'id',
         referencingTable: 'article',
         referencingColumn: 'authorId',
         schema: {
-          type: 'referencing-table',
+          type: 'one-to-many',
           column: 'id',
           referencingTable: 'comment',
           referencingColumn: 'articleId',
@@ -763,17 +783,17 @@ test('double nested insert referencing table', () => {
       table: 'organization',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'id',
         referencingTable: 'user',
         referencingColumn: 'organizationId',
         schema: {
-          type: 'referencing-table',
+          type: 'one-to-many',
           column: 'id',
           referencingTable: 'article',
           referencingColumn: 'authorId',
           schema: {
-            type: 'referencing-table',
+            type: 'one-to-many',
             column: 'id',
             referencingTable: 'comment',
             referencingColumn: 'articleId',
@@ -809,7 +829,7 @@ test('insert referencing table top level, non PK', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'ref',
         referencingTable: 'article',
         referencingColumn: 'authorRef',
@@ -842,7 +862,7 @@ test('insert referencing table, random table', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'id',
         referencingTable: 'article',
         referencingColumn: 'authorId',
@@ -868,7 +888,7 @@ test('delete referencing table top level', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'id',
         referencingTable: 'article',
         referencingColumn: 'authorId',
@@ -894,7 +914,7 @@ test('delete referencing table top level, non PK', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'ref',
         referencingTable: 'article',
         referencingColumn: 'authorRef',
@@ -927,7 +947,7 @@ test('delete referencing table, random table', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'id',
         referencingTable: 'article',
         referencingColumn: 'authorId',
@@ -953,7 +973,7 @@ test('update referencing table top level', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'id',
         referencingTable: 'article',
         referencingColumn: 'authorId',
@@ -979,7 +999,7 @@ test('update referencing table top level foreign key', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'id',
         referencingTable: 'article',
         referencingColumn: 'authorId',
@@ -1005,7 +1025,7 @@ test('update referencing table top level uninteresting column', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'id',
         referencingTable: 'article',
         referencingColumn: 'authorId',
@@ -1031,7 +1051,7 @@ test('update referencing table top level, non PK', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'ref',
         referencingTable: 'article',
         referencingColumn: 'authorRef',
@@ -1064,7 +1084,7 @@ test('update referencing table top level, non PK, referencing column', () => {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'ref',
         referencingTable: 'article',
         referencingColumn: 'authorRef',
@@ -1091,19 +1111,19 @@ test('update referencing table top level, non PK, referencing column', () => {
   );
 });
 
-test('nested foreignKey referencingTable', () => {
+test('nested many-to-one one-to-many', () => {
   const result = listDependencies(
     {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'organizationId',
         referencesColumn: 'id',
         referencesTable: 'organization',
         hasFKConstraint: true,
         schema: {
-          type: 'referencing-table',
+          type: 'one-to-many',
           column: 'id',
           referencingTable: 'article',
           referencingColumn: 'organizationId',
@@ -1131,25 +1151,25 @@ test('nested foreignKey referencingTable', () => {
   );
 });
 
-test('double nested foreignKey referencingTable', () => {
+test('double nested many-to-one one-to-many', () => {
   const result = listDependencies(
     {
       table: 'comment',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'userId',
         referencesTable: 'user',
         referencesColumn: 'id',
         hasFKConstraint: true,
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'organizationId',
           referencesColumn: 'id',
           referencesTable: 'organization',
           hasFKConstraint: true,
           schema: {
-            type: 'referencing-table',
+            type: 'one-to-many',
             column: 'id',
             referencingTable: 'article',
             referencingColumn: 'organizationId',
@@ -1179,30 +1199,30 @@ test('double nested foreignKey referencingTable', () => {
   );
 });
 
-test('triple nested foreignKey referencingTable', () => {
+test('triple nested many-to-one one-to-many', () => {
   const result = listDependencies(
     {
       table: 'comment',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'userId',
         referencesTable: 'user',
         referencesColumn: 'id',
         hasFKConstraint: true,
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'organizationId',
           referencesColumn: 'id',
           referencesTable: 'organization',
           hasFKConstraint: true,
           schema: {
-            type: 'referencing-table',
+            type: 'one-to-many',
             column: 'id',
             referencingTable: 'article',
             referencingColumn: 'organizationId',
             schema: {
-              type: 'referencing-table',
+              type: 'one-to-many',
               column: 'id',
               referencingTable: 'like',
               referencingColumn: 'articleId',
@@ -1234,19 +1254,19 @@ test('triple nested foreignKey referencingTable', () => {
   );
 });
 
-test('triple nested foreignKey referencingTable with object', () => {
+test('triple nested many-to-one one-to-many with object', () => {
   const result = listDependencies(
     {
       table: 'comment',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'userId',
         referencesTable: 'user',
         referencesColumn: 'id',
         hasFKConstraint: true,
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'organizationId',
           referencesColumn: 'id',
           referencesTable: 'organization',
@@ -1259,12 +1279,12 @@ test('triple nested foreignKey referencingTable with object', () => {
                 column: 'name',
               },
               likes: {
-                type: 'referencing-table',
+                type: 'one-to-many',
                 column: 'id',
                 referencingTable: 'article',
                 referencingColumn: 'organizationId',
                 schema: {
-                  type: 'referencing-table',
+                  type: 'one-to-many',
                   column: 'id',
                   referencingTable: 'like',
                   referencingColumn: 'articleId',
@@ -1298,19 +1318,19 @@ test('triple nested foreignKey referencingTable with object', () => {
   );
 });
 
-test('triple nested foreignKey referencingTable with object update', () => {
+test('triple nested many-to-one one-to-many with object update', () => {
   const result = listDependencies(
     {
       table: 'comment',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'userId',
         referencesTable: 'user',
         referencesColumn: 'id',
         hasFKConstraint: true,
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'organizationId',
           referencesColumn: 'id',
           referencesTable: 'organization',
@@ -1323,12 +1343,12 @@ test('triple nested foreignKey referencingTable with object update', () => {
                 column: 'name',
               },
               likes: {
-                type: 'referencing-table',
+                type: 'one-to-many',
                 column: 'id',
                 referencingTable: 'article',
                 referencingColumn: 'organizationId',
                 schema: {
-                  type: 'referencing-table',
+                  type: 'one-to-many',
                   column: 'id',
                   referencingTable: 'like',
                   referencingColumn: 'articleId',
@@ -1361,13 +1381,13 @@ test('triple nested foreignKey referencingTable with object update', () => {
   );
 });
 
-test('nested foreignKey referencingTable, skip middle table', () => {
+test('nested many-to-one one-to-many, skip middle table', () => {
   const result = listDependencies(
     {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'organizationId',
         referencesColumn: 'organizationId',
         referencesTable: 'article',
@@ -1395,18 +1415,18 @@ test('nested foreignKey referencingTable, skip middle table', () => {
   );
 });
 
-test('nested referencingTable foreignKey', () => {
+test('nested one-to-many many-to-one', () => {
   const result = listDependencies(
     {
       table: 'user',
       primaryKey: 'id',
       schema: {
-        type: 'referencing-table',
+        type: 'one-to-many',
         column: 'id',
         referencingTable: 'user_organization',
         referencingColumn: 'userId',
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'organizationId',
           referencesTable: 'organization',
           referencesColumn: 'id',
@@ -1448,12 +1468,12 @@ test('both direct and indirect', () => {
             column: 'name',
           },
           followers: {
-            type: 'referencing-table',
+            type: 'one-to-many',
             column: 'id',
             referencingTable: 'follows',
             referencingColumn: 'userId',
             schema: {
-              type: 'foreign-key',
+              type: 'many-to-one',
               column: 'followsUserId',
               referencesTable: 'user',
               referencesColumn: 'id',
@@ -1490,7 +1510,7 @@ test('multiple queries', () => {
       table: 'article',
       primaryKey: 'id',
       schema: {
-        type: 'foreign-key',
+        type: 'many-to-one',
         column: 'authorId',
         referencesColumn: 'id',
         referencesTable: 'user',
@@ -1503,12 +1523,12 @@ test('multiple queries', () => {
               column: 'name',
             },
             follows: {
-              type: 'referencing-table',
+              type: 'one-to-many',
               column: 'id',
               referencingTable: 'follows',
               referencingColumn: 'userId',
               schema: {
-                type: 'foreign-key',
+                type: 'many-to-one',
                 column: 'followsUserId',
                 referencesTable: 'user',
                 referencesColumn: 'id',

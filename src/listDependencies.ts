@@ -8,8 +8,8 @@ import {QueryBuilder} from './QueryBuilder';
 const getSchemaColumns = (schema: Schema): string[] => {
   if (
     schema.type === 'column' ||
-    schema.type === 'foreign-key' ||
-    schema.type === 'referencing-table'
+    schema.type === 'many-to-one' ||
+    schema.type === 'one-to-many'
   ) {
     return [schema.column];
   }
@@ -18,7 +18,7 @@ const getSchemaColumns = (schema: Schema): string[] => {
     return Object.values(schema.properties).flatMap(getSchemaColumns);
   }
 
-  return [];
+  throw new Error('Unknown schema type');
 };
 
 const overlaps = (a: string[], b: string[]) => {
@@ -68,13 +68,20 @@ export const listDependencies = (
     table,
     onFind,
     depth = 0,
+    parent,
   }: {
     schema: Schema;
     table: string;
-    onFind: (options: {query: QueryBuilder; tableAlias: string}) => void;
+    onFind: (options: {
+      query: QueryBuilder;
+      tableAlias: string;
+      overrideColumn?: string;
+      leafOneToMany?: {column: string; ids: unknown[]};
+    }) => void;
     depth?: number;
+    parent?: Schema;
   }) => {
-    if (schema.type === 'foreign-key') {
+    if (schema.type === 'many-to-one') {
       // Before walking down the graph, we need to check if the event impacts the current node
       if (
         schema.referencesTable === event.table &&
@@ -110,21 +117,35 @@ export const listDependencies = (
       findDependencies({
         schema: schema.schema,
         table: schema.referencesTable,
-        onFind: ({query, tableAlias}) => {
+        onFind: ({query, tableAlias, overrideColumn, leafOneToMany}) => {
           const tAlias = tableAliasCache.getAlias(table);
+
+          if (
+            leafOneToMany &&
+            leafOneToMany.column === schema.referencesColumn
+          ) {
+            onFind({
+              query: new QueryBuilder()
+                .from(`"${table}" as "${tAlias}"`)
+                .whereIn(`"${tAlias}"."${schema.column}"`, leafOneToMany.ids),
+              tableAlias: tAlias,
+            });
+            return;
+          }
 
           query.leftJoin(
             `"${table}" as "${tAlias}"`,
             `"${tAlias}"."${schema.column}"`,
-            `"${tableAlias}"."${schema.referencesColumn}"`,
+            `"${tableAlias}"."${overrideColumn ?? schema.referencesColumn}"`,
           );
           onFind({query, tableAlias: tAlias});
         },
         depth: depth + 1,
+        parent: schema,
       });
     }
 
-    if (schema.type === 'referencing-table') {
+    if (schema.type === 'one-to-many') {
       // Before walking down the graph, we need to check if the event impacts the current node
       if (
         schema.referencingTable === event.table &&
@@ -154,6 +175,13 @@ export const listDependencies = (
                 event.dataOld?.[schema.referencingColumn],
               ]),
             tableAlias,
+            leafOneToMany: {
+              column: schema.column,
+              ids: [
+                event.data?.[schema.referencingColumn],
+                event.dataOld?.[schema.referencingColumn],
+              ],
+            },
           });
         }
       }
@@ -162,12 +190,28 @@ export const listDependencies = (
       findDependencies({
         schema: schema.schema,
         table: schema.referencingTable,
-        onFind: ({query, tableAlias}) => {
+        onFind: ({query, tableAlias, overrideColumn}) => {
           if (depth === 0 && schema.column === rootSchema.primaryKey) {
             query
-              .select(`"${tableAlias}"."${schema.referencingColumn}" as "id"`)
-              .groupBy(`"${tableAlias}"."${schema.referencingColumn}"`);
+              .select(
+                `"${tableAlias}"."${overrideColumn ?? schema.referencingColumn}" as "id"`,
+              )
+              .groupBy(
+                `"${tableAlias}"."${overrideColumn ?? schema.referencingColumn}"`,
+              );
             queries.push(query);
+            return;
+          }
+
+          if (
+            parent?.type === 'many-to-one' &&
+            parent.referencesColumn === schema.column
+          ) {
+            onFind({
+              query,
+              tableAlias,
+              overrideColumn: schema.referencingColumn,
+            });
             return;
           }
 
@@ -176,18 +220,19 @@ export const listDependencies = (
           query.leftJoin(
             `"${table}" as "${tAlias}"`,
             `"${tAlias}"."${schema.column}"`,
-            `"${tableAlias}"."${schema.referencingColumn}"`,
+            `"${tableAlias}"."${overrideColumn ?? schema.referencingColumn}"`,
           );
           onFind({query, tableAlias: tAlias});
         },
         depth: depth + 1,
+        parent: schema,
       });
     }
 
     if (schema.type === 'object') {
       // If the schema is an object, we need to walk down the graph for each individual key
       for (const subSchema of Object.values(schema.properties)) {
-        findDependencies({schema: subSchema, table, onFind, depth});
+        findDependencies({schema: subSchema, table, onFind, depth, parent});
       }
     }
   };

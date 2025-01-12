@@ -1,5 +1,20 @@
-import {expectQuery} from './helpers.test';
+import {expectQuery} from './test/helpers';
 import {buildObjects} from './buildObjects';
+
+test('unknown type', () => {
+  expect(() =>
+    buildObjects(
+      {
+        table: 'user',
+        primaryKey: 'id',
+        schema: {
+          type: 'foo',
+        },
+      } as any,
+      ['foo'],
+    ),
+  ).toThrow('Unknown schema type');
+});
 
 test('column', () => {
   expectQuery(
@@ -55,7 +70,7 @@ test('foreignKey', () => {
         table: 'article',
         primaryKey: 'id',
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'authorId',
           referencesTable: 'user',
           referencesColumn: 'id',
@@ -88,7 +103,7 @@ test('multiple foreignKey', () => {
           type: 'object',
           properties: {
             author: {
-              type: 'foreign-key',
+              type: 'many-to-one',
               column: 'authorId',
               referencesTable: 'user',
               referencesColumn: 'id',
@@ -99,7 +114,7 @@ test('multiple foreignKey', () => {
               },
             },
             organization: {
-              type: 'foreign-key',
+              type: 'many-to-one',
               column: 'organizationId',
               referencesTable: 'organization',
               referencesColumn: 'id',
@@ -136,13 +151,13 @@ test('nested foreignKey', () => {
         table: 'article',
         primaryKey: 'id',
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'authorId',
           referencesTable: 'user',
           referencesColumn: 'id',
           hasFKConstraint: true,
           schema: {
-            type: 'foreign-key',
+            type: 'many-to-one',
             column: 'organizationId',
             referencesTable: 'organization',
             referencesColumn: 'id',
@@ -177,7 +192,7 @@ test('referencing table', () => {
         table: 'article',
         primaryKey: 'id',
         schema: {
-          type: 'referencing-table',
+          type: 'one-to-many',
           column: 'id',
           referencingTable: 'comment',
           referencingColumn: 'articleId',
@@ -210,7 +225,7 @@ test('double referencing table', () => {
           type: 'object',
           properties: {
             comments: {
-              type: 'referencing-table',
+              type: 'one-to-many',
               column: 'id',
               referencingTable: 'comment',
               referencingColumn: 'articleId',
@@ -220,7 +235,7 @@ test('double referencing table', () => {
               },
             },
             likes: {
-              type: 'referencing-table',
+              type: 'one-to-many',
               column: 'id',
               referencingTable: 'like',
               referencingColumn: 'articleId',
@@ -262,12 +277,12 @@ test('nested referencing table', () => {
         table: 'user',
         primaryKey: 'id',
         schema: {
-          type: 'referencing-table',
+          type: 'one-to-many',
           column: 'id',
           referencingTable: 'article',
           referencingColumn: 'authorId',
           schema: {
-            type: 'referencing-table',
+            type: 'one-to-many',
             column: 'id',
             referencingTable: 'comment',
             referencingColumn: 'articleId',
@@ -307,12 +322,12 @@ test('same table multiple times', () => {
         table: 'user',
         primaryKey: 'id',
         schema: {
-          type: 'referencing-table',
+          type: 'one-to-many',
           column: 'id',
           referencingTable: 'follower',
           referencingColumn: 'userId',
           schema: {
-            type: 'foreign-key',
+            type: 'many-to-one',
             column: 'followsUserId',
             referencesTable: 'user',
             referencesColumn: 'id',
@@ -348,13 +363,13 @@ test('skip middle table', () => {
         table: 'user',
         primaryKey: 'id',
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'organizationId',
           referencesTable: 'organization',
           referencesColumn: 'id',
           hasFKConstraint: true,
           schema: {
-            type: 'referencing-table',
+            type: 'one-to-many',
             column: 'id',
             referencingTable: 'article',
             referencingColumn: 'organizationId',
@@ -387,13 +402,13 @@ test('do not skip middle table if not same column', () => {
         table: 'user',
         primaryKey: 'id',
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'organizationId',
           referencesTable: 'organization',
           referencesColumn: 'id',
           hasFKConstraint: true,
           schema: {
-            type: 'referencing-table',
+            type: 'one-to-many',
             column: 'ref',
             referencingTable: 'article',
             referencingColumn: 'organizationRef',
@@ -430,7 +445,7 @@ test('do not skip middle table if read', () => {
         table: 'user',
         primaryKey: 'id',
         schema: {
-          type: 'foreign-key',
+          type: 'many-to-one',
           column: 'organizationId',
           referencesTable: 'organization',
           referencesColumn: 'id',
@@ -443,7 +458,7 @@ test('do not skip middle table if read', () => {
                 column: 'name',
               },
               articles: {
-                type: 'referencing-table',
+                type: 'one-to-many',
                 column: 'id',
                 referencingTable: 'article',
                 referencingColumn: 'organizationId',
