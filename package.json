@@ -9,7 +9,10 @@
     "clean": "gts clean",
     "compile": "tsc",
     "fix": "gts fix",
-    "prepare": "npm run compile"
+    "prepare": "npm run compile",
+    "prepublishOnly": "npm test && npm run clean && npm run compile",
+    "preversion": "npm test",
+    "postversion": "git push && git push --tags"
   },
   "author": "",
   "license": "ISC",
