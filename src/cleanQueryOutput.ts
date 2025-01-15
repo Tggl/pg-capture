@@ -3,7 +3,7 @@
  * - Removes duplicates from arrays
  * - Removes null values from array
  */
-export const cleanQueryOutput = (value: unknown): unknown => {
+export const cleanQueryOutput = <In, Out = In>(value: In): Out => {
   if (Array.isArray(value)) {
     const viewed = new Set<string>();
     return value.flatMap(cleanQueryOutput).filter(v => {
@@ -11,7 +11,7 @@ export const cleanQueryOutput = (value: unknown): unknown => {
       const seen = viewed.has(hash);
       viewed.add(hash);
       return v !== null && !seen;
-    });
+    }) as Out;
   }
 
   if (typeof value === 'object' && value !== null) {
@@ -21,5 +21,5 @@ export const cleanQueryOutput = (value: unknown): unknown => {
     }
   }
 
-  return value;
+  return value as unknown as Out;
 };

@@ -4,11 +4,10 @@ A modular CDC (Change Data Capture) utility for PostgreSQL. Works on top of the 
 
 `pg-capture` is like having WAL (Write Ahead Log) events on an SQL view.
 
-- Aggregate table-level events into schema level events
+- Aggregate low level events on tables (insert, update, and delete) into high level events on schemas (object upsert or delete)
 - Use PG as your single source of truth
 - Keep PG in sync with other storages such as Elasticsearch, Redis, etc...
 - Subscribe to schema changes in real-time
-- Never miss a beat
 
 ## Usage
 Start by defining a schema:
@@ -45,7 +44,152 @@ const schema: RootSchema = {
 };
 ```
 
-To build an object for a given set of ids, simply call the `buildSchemaQuery` function:
+Here the schema describes an object that looks like this:
+```json
+{
+  "id": "foo",
+  "title": "Harry Potter",
+  "author": "J.K. Rowling"
+}
+```
+
+This object will change if the table `book` or `author` changes. This library allows you to turn low level events on tables (ie. insert, update, and delete) into high level events on schemas (ie. object upsert or delete).
+
+To aggregate low level events create an aggregator:
+
+```typescript
+import { EventAggregator, Changes } from 'pg-capture';
+import { Client } from 'pg';
+
+const client = new Client(/*...*/)
+
+const onChange = (changes: Changes) => {
+  console.log(changes.upsert); // An array of { id, object } that were upserted
+  console.log(changes.delete); // An array of root ids that were deleted
+}
+
+const aggregator = new EventAggregator({
+  schema,
+  client,
+  onChange
+})
+```
+
+you can now use any tool to catch PG replication events (eg. [pg-logical-replication](https://www.npmjs.com/package/pg-logical-replication)) and forward the event to the `handleEvent` method:
+
+```typescript
+await aggregator.handleEvent({
+  action: 'INSERT',
+    table: 'book',
+    data: {
+      id: 'foo',
+      title: 'Harry Potter',
+      authorId: 'bar',
+  },
+  dataOld: undefined,
+})
+```
+
+This will result on the `onChange` callback being called with the following changes object:
+```json
+{
+  "upsert": [
+    {
+      "id": "foo",
+      "object": {
+        "id": "foo",
+        "title": "Harry Potter",
+        "author": "J.K. Rowling"
+      }
+    }
+  ],
+  "delete": []
+}
+```
+
+## How to
+### Forward events to a queue
+It is up to you to forward high level events into a queue. Here is an example using RabbitMQ:
+```typescript
+const aggregator = new EventAggregator({
+  schema,
+  client,
+  onChange: (changes) => {
+    channel.sendToQueue('my-queue', Buffer.from(JSON.stringify(changes)));
+  }
+})
+```
+
+### Aggregate events
+To avoid re-building an object too many times when multiple tables are updated simultaneously, and to leverage batching, you can throttle events:
+
+```typescript
+const aggregator = new EventAggregator({
+  schema,
+  client,
+  scheduleBuildObjects: (build) => {
+    setTimeout(() => {
+      build();
+    }, 100);
+  }
+})
+```
+
+This will aggregate all events that happen within 100ms into a single call to the `onChange` callback.
+
+## Under the hood
+
+To know if a schema is impacted by an event, the aggregator calls the `getRootIdsFromEvent` function:
+
+```typescript
+import { getRootIdsFromEvent } from 'pg-captur';
+
+const { ids, query } = getRootIdsFromEvent(schema, {
+  action: 'INSERT',
+  table: 'book',
+  data: {
+    id: 'foo',
+    title: 'Harry Potter',
+  },
+  dataOld: undefined,
+});
+```
+
+`ids` is an array of root ids that we know were affected by the event without doing any database call. In our example, here `ids` would be `['foo']` since we know that it was just inserted.
+
+`query` is a query that can be run to get the full list of root ids that were affected by the event but could not be deduced immediately. In our example, `query` would be null.
+
+Let's have a look at an event on the `author` table:
+
+```typescript
+const { ids, query } = getRootIdsFromEvent(schema, {
+  action: 'UPDATE',
+  table: 'author',
+  data: {
+    id: 'bar',
+    name: 'Alice',
+  },
+  dataOld: {
+    id: 'bar',
+    name: 'Bob',
+  },
+});
+
+const { text, values } = query.toQuery();
+```
+
+Here `ids` would be an empty array because we cannot know which objects were affected by the update directly. And the `query` would be:
+
+```sql
+SELECT "book_1"."id" as "id" 
+FROM "book" as "book_1"  
+WHERE "book_1"."authorId" = $1 
+GROUP BY "book_1"."id"
+```
+
+Running this query would give you a list of root ids (here ids of books) that were affected by the update. You can concatenate this list with the `ids` array to get the full list of root ids that were affected by the event.
+
+From the list of ids, the aggregator can build the objects by calling the `buildSchemaQuery` function: 
 
 ```typescript
 import { buildSchemaQuery } from 'pg-capture';
@@ -55,7 +199,7 @@ const query = buildSchemaQuery(schema, ['foo']);
 const { text, values } = result.toQuery();
 ```
 
-You can now run the query against your database to get the value of the object. In this case the bindings (ie. `values`) would be `['foo']` and the query (ie. `text`) will be:
+In this example the bindings (ie. `values`) would be `['foo']` and the query (ie. `text`) will be:
 
 ```sql
 SELECT 
@@ -75,72 +219,4 @@ LEFT JOIN (
 WHERE "book_1"."id" = $1
 ```
 
-To know when the object was updated (and therefore when to re-run the query above), you can use any tool to catch PG replication events (eg. [pg-logical-replication](https://www.npmjs.com/package/pg-logical-replication)) and forward the event to the `getRootIdsFromEvent` function:
-
-```typescript
-import { getRootIdsFromEvent } from 'pg-captur';
-
-const { ids, query } = getRootIdsFromEvent(schema, {
-  action: 'INSERT',
-  table: 'book',
-  data: {
-    id: 'foo',
-    title: 'Harry Potter',
-  },
-  dataOld: undefined,
-});
-```
-
-Here `ids` would be `['foo']`, indicating that we should build the schema for the object with id `foo` (since it was just inserted) and `query` would be null. 
-
-Here is another example with an event on the `author` table:
-
-```typescript
-const { ids, query } = getRootIdsFromEvent(schema, {
-  action: 'UPDATE',
-  table: 'author',
-  data: {
-    id: 'bar',
-    name: 'Alice',
-  },
-  dataOld: {
-    id: 'bar',
-    name: 'Bob',
-  },
-});
-
-const { text, values } = query.toQuery();
-```
-
-Here `ids` would be an empty array because we do not know which objects were affected by the update. The `query` would be an object with bindings `['foo']` and the query:
-
-```sql
-SELECT "book_1"."id" as "id" 
-FROM "book" as "book_1"  
-WHERE "book_1"."authorId" = $1 
-GROUP BY "book_1"."id"
-```
-
-Running this query would give you a list of root ids (here ids of books) that were affected by the update. You can concatenate this list with the `ids` array to get the full list of root ids that were affected by the event:
-  
-```typescript
-const { ids, query } = getRootIdsFromEvent(schema, event);
-
-if (query) {
-  const result = await query.run(client);
-  ids.push(...result.map((row) => row.id));
-}
-
-const schemaQuery = buildSchemaQuery(schema, ids);
-const result = await schemaQuery.run(client);
-
-for (const id of ids) {
-  const object = result.find((row) => row.id === id);
-  
-  if (!object) {
-    // Object was deleted
-  } else {
-    // Object was created / updated
-  }
-}
-```
+If the query returns a result for a given id, then the object was upserted. If the query returns no result, then the object was deleted.

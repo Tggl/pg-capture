@@ -72,3 +72,9 @@ export type Changes = {
 export type Client = {
   query: (query: string, bindings?: unknown[]) => Promise<{rows: unknown[]}>;
 };
+
+export interface IdsSet {
+  add(ids: unknown[]): void | Promise<void>;
+  delete(ids: unknown[]): void | Promise<void>;
+  getAll(): AsyncGenerator<unknown[]> | Generator<unknown[]>;
+}
