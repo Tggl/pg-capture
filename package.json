@@ -11,7 +11,7 @@
     "fix": "gts fix",
     "prepare": "npm run compile",
     "prepublishOnly": "npm test && npm run clean && npm run compile",
-    "preversion": "npm test",
+    "preversion": "npm test && npm run clean && npm run compile",
     "postversion": "git push && git push --tags"
   },
   "type": "module",
