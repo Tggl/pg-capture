@@ -13,7 +13,7 @@ A modular CDC (Change Data Capture) utility for PostgreSQL. Works on top of the 
 ## Usage
 Start by defining a schema:
 ```typescript
-import { RootSchema } from 'pg-capture/build/types';
+import { RootSchema } from 'pg-capture';
 
 const schema: RootSchema = {
   table: 'book',
@@ -48,7 +48,7 @@ const schema: RootSchema = {
 To build an object for a given set of ids, simply call the `buildSchemaQuery` function:
 
 ```typescript
-import { buildSchemaQuery } from 'pg-capture/build/buildSchemaQuery';
+import { buildSchemaQuery } from 'pg-capture';
 
 const query = buildSchemaQuery(schema, ['foo']);
 
@@ -78,7 +78,7 @@ WHERE "book_1"."id" = $1
 To know when the object was updated (and therefore when to re-run the query above), you can use any tool to catch PG replication events (eg. [pg-logical-replication](https://www.npmjs.com/package/pg-logical-replication)) and forward the event to the `getRootIdsFromEvent` function:
 
 ```typescript
-import { getRootIdsFromEvent } from "pg-capture/build/getRootIdsFromEvent";
+import { getRootIdsFromEvent } from 'pg-captur';
 
 const { ids, query } = getRootIdsFromEvent(schema, {
   action: 'INSERT',
@@ -127,16 +127,15 @@ Running this query would give you a list of root ids (here ids of books) that we
 const { ids, query } = getRootIdsFromEvent(schema, event);
 
 if (query) {
-  const { text, values } = query.toQuery();
-  const result = await client.query(text, values);
-  ids.push(...result.rows.map((row) => row.id));
+  const result = await query.run(client);
+  ids.push(...result.map((row) => row.id));
 }
 
 const schemaQuery = buildSchemaQuery(schema, ids);
-const result = await client.query(text, values);
+const result = await schemaQuery.run(client);
 
 for (const id of ids) {
-  const object = result.rows.find((row) => row.id === id);
+  const object = result.find((row) => row.id === id);
   
   if (!object) {
     // Object was deleted

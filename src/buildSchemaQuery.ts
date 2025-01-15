@@ -22,10 +22,10 @@ const buildQuery = ({
   identifierColumn: string;
   group?: boolean;
   schema: Schema;
-}): QueryBuilder<{id: string; record: unknown}> => {
+}): QueryBuilder<{id: unknown; object: unknown}> => {
   const tableAlias = tableAliasCache.getAlias(table);
 
-  const query = new QueryBuilder<{id: string; record: unknown}>()
+  const query = new QueryBuilder<{id: unknown; object: unknown}>()
     .from(`"${table}" AS "${tableAlias}"`)
     .select(`"${tableAlias}"."${identifierColumn}" AS "${identifierColumn}"`);
 
@@ -129,7 +129,7 @@ const buildQuery = ({
 export const buildSchemaQuery = (
   schema: RootSchema,
   ids: unknown[],
-): QueryBuilder<{id: string; record: unknown}> => {
+): QueryBuilder<{id: unknown; object: unknown}> => {
   return buildQuery({
     table: schema.table,
     identifierColumn: schema.primaryKey,

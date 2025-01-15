@@ -59,7 +59,16 @@ export type WALEvent =
       dataOld: Record<string, unknown>;
     };
 
-export type Dependencies = {
-  ids: string[];
-  query: QueryBuilder<{id: string}> | null;
+export type RootIdsResult = {
+  ids: unknown[];
+  query: QueryBuilder<{id: unknown}> | null;
+};
+
+export type Changes = {
+  upsert: {id: unknown; object: unknown}[];
+  delete: unknown[];
+};
+
+export type Client = {
+  query: (query: string, bindings?: unknown[]) => Promise<{rows: unknown[]}>;
 };

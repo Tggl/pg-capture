@@ -1,5 +1,5 @@
-import type {QueryConfig} from 'pg';
 import {randomBytes} from 'crypto';
+import {Client} from './types';
 
 export class QueryBuilder<T = unknown> {
   private _select: string[] = [];
@@ -28,6 +28,11 @@ export class QueryBuilder<T = unknown> {
 
   leftJoin(table: string, column1: string, column2: string): this {
     this._leftJoin.push(`LEFT JOIN ${table} ON ${column1} = ${column2}`);
+    return this;
+  }
+
+  innerJoin(table: string, column1: string, column2: string): this {
+    this._leftJoin.push(`INNER JOIN ${table} ON ${column1} = ${column2}`);
     return this;
   }
 
@@ -111,10 +116,10 @@ export class QueryBuilder<T = unknown> {
     return result;
   }
 
-  toQuery(): QueryConfig {
+  toQuery(): {text: string; values: unknown[]} {
     const {sql, bindings} = this.compile();
 
-    const result: QueryConfig = {
+    const result: {text: string; values: unknown[]} = {
       text: sql,
       values: [],
     };
@@ -127,5 +132,10 @@ export class QueryBuilder<T = unknown> {
     }
 
     return result;
+  }
+
+  run(client: Client): Promise<T[]> {
+    const {text, values} = this.toQuery();
+    return client.query(text, values).then(result => result.rows as T[]);
   }
 }

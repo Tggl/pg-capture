@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "lint": "gts lint",
-    "clean": "gts clean && rm tsconfig.tsbuildinfo",
+    "clean": "gts clean && rm -f tsconfig.tsbuildinfo",
     "compile": "tsc",
     "fix": "gts fix",
     "prepare": "npm run compile",
@@ -14,6 +14,8 @@
     "preversion": "npm test",
     "postversion": "git push && git push --tags"
   },
+  "type": "module",
+  "sideEffects": false,
   "author": "",
   "license": "ISC",
   "description": "",

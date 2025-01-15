@@ -480,7 +480,7 @@ test('nested many-to-one update', () => {
     result.query,
     `SELECT "article_1"."id" AS "id"
      FROM "user" AS "user_1"
-     LEFT JOIN "article" AS "article_1" ON "article_1"."authorId" = "user_1"."id"
+     INNER JOIN "article" AS "article_1" ON "article_1"."authorId" = "user_1"."id"
      WHERE "user_1"."organizationId" = 'foo'
      GROUP BY "article_1"."id"`,
   );
@@ -529,8 +529,8 @@ test('double nested many-to-one update', () => {
     result.query,
     `SELECT "comment_1"."id" AS "id"
      FROM "user" AS "user_1"
-     LEFT JOIN "article" AS "article_1" ON "article_1"."authorId" = "user_1"."id"
-     LEFT JOIN "comment" AS "comment_1" ON "comment_1"."articleId" = "article_1"."id"
+     INNER JOIN "article" AS "article_1" ON "article_1"."authorId" = "user_1"."id"
+     INNER JOIN "comment" AS "comment_1" ON "comment_1"."articleId" = "article_1"."id"
      WHERE "user_1"."organizationId" = 'foo'
      GROUP BY "comment_1"."id"`,
   );
@@ -817,7 +817,7 @@ test('double nested insert referencing table', () => {
     result.query,
     `SELECT "user_1"."organizationId" AS "id"
      FROM "article" AS "article_1"
-     LEFT JOIN "user" AS "user_1" ON "user_1"."id" = "article_1"."authorId"
+     INNER JOIN "user" AS "user_1" ON "user_1"."id" = "article_1"."authorId"
      WHERE "article_1"."id" = 'foo'
      GROUP BY "user_1"."organizationId"`,
   );
@@ -1193,7 +1193,7 @@ test('double nested many-to-one one-to-many', () => {
     result.query,
     `SELECT "comment_1"."id" AS "id"
      FROM "user" AS "user_1"
-     LEFT JOIN "comment" AS "comment_1" ON "comment_1"."userId" = "user_1"."id"
+     INNER JOIN "comment" AS "comment_1" ON "comment_1"."userId" = "user_1"."id"
      WHERE "user_1"."organizationId" = 'foo'
      GROUP BY "comment_1"."id"`,
   );
@@ -1247,8 +1247,8 @@ test('triple nested many-to-one one-to-many', () => {
     result.query,
     `SELECT "comment_1"."id" AS "id"
      FROM "article" AS "article_1"
-     LEFT JOIN "user" AS "user_1" ON "user_1"."organizationId" = "article_1"."organizationId"
-     LEFT JOIN "comment" AS "comment_1" ON "comment_1"."userId" = "user_1"."id"
+     INNER JOIN "user" AS "user_1" ON "user_1"."organizationId" = "article_1"."organizationId"
+     INNER JOIN "comment" AS "comment_1" ON "comment_1"."userId" = "user_1"."id"
      WHERE "article_1"."id" = 'foo'
      GROUP BY "comment_1"."id"`,
   );
@@ -1311,8 +1311,8 @@ test('triple nested many-to-one one-to-many with object', () => {
     result.query,
     `SELECT "comment_1"."id" AS "id"
      FROM "article" AS "article_1"
-     LEFT JOIN "user" AS "user_1" ON "user_1"."organizationId" = "article_1"."organizationId"
-     LEFT JOIN "comment" AS "comment_1" ON "comment_1"."userId" = "user_1"."id"
+     INNER JOIN "user" AS "user_1" ON "user_1"."organizationId" = "article_1"."organizationId"
+     INNER JOIN "comment" AS "comment_1" ON "comment_1"."userId" = "user_1"."id"
      WHERE "article_1"."id" = 'foo'
      GROUP BY "comment_1"."id"`,
   );
@@ -1375,7 +1375,7 @@ test('triple nested many-to-one one-to-many with object update', () => {
     result.query,
     `SELECT "comment_1"."id" AS "id"
      FROM "user" AS "user_1"
-     LEFT JOIN "comment" AS "comment_1" ON "comment_1"."userId" = "user_1"."id"
+     INNER JOIN "comment" AS "comment_1" ON "comment_1"."userId" = "user_1"."id"
      WHERE "user_1"."organizationId" = 'foo'
      GROUP BY "comment_1"."id"`,
   );
@@ -1562,7 +1562,7 @@ test('multiple queries', () => {
      
      SELECT "article_2"."id" AS "id"
      FROM "follows" AS "follows_1"
-     LEFT JOIN "article" AS "article_2" ON "article_2"."authorId" = "follows_1"."userId"
+     INNER JOIN "article" AS "article_2" ON "article_2"."authorId" = "follows_1"."userId"
      WHERE "follows_1"."followsUserId" = 'foo'
      GROUP BY "article_2"."id"`,
   );

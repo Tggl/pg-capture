@@ -1,4 +1,4 @@
-import {Dependencies, RootSchema, Schema, WALEvent} from './types';
+import {RootIdsResult, RootSchema, Schema, WALEvent} from './types';
 import {TableAliasCache} from './TableAliasCache';
 import {QueryBuilder} from './QueryBuilder';
 
@@ -28,9 +28,9 @@ const overlaps = (a: string[], b: string[]) => {
 export const getRootIdsFromEvent = (
   rootSchema: RootSchema,
   event: WALEvent,
-): Dependencies => {
+): RootIdsResult => {
   const ids: unknown[] = [];
-  const queries: QueryBuilder<{id: string}>[] = [];
+  const queries: QueryBuilder<{id: unknown}>[] = [];
   const updatedColumns =
     event.action === 'UPDATE'
       ? Object.keys(event.data).filter(
@@ -73,7 +73,7 @@ export const getRootIdsFromEvent = (
     schema: Schema;
     table: string;
     onFind: (options: {
-      query: QueryBuilder;
+      query: QueryBuilder<{id: unknown}>;
       tableAlias: string;
       overrideColumn?: string;
       leafOneToMany?: {column: string; ids: unknown[]};
@@ -102,7 +102,7 @@ export const getRootIdsFromEvent = (
           const tableAlias = tableAliasCache.getAlias(table);
 
           onFind({
-            query: new QueryBuilder()
+            query: new QueryBuilder<{id: unknown}>()
               .from(`"${table}" as "${tableAlias}"`)
               .whereIn(`"${tableAlias}"."${schema.column}"`, [
                 event.data?.[schema.referencesColumn],
@@ -125,7 +125,7 @@ export const getRootIdsFromEvent = (
             leafOneToMany.column === schema.referencesColumn
           ) {
             onFind({
-              query: new QueryBuilder()
+              query: new QueryBuilder<{id: unknown}>()
                 .from(`"${table}" as "${tAlias}"`)
                 .whereIn(`"${tAlias}"."${schema.column}"`, leafOneToMany.ids),
               tableAlias: tAlias,
@@ -133,7 +133,7 @@ export const getRootIdsFromEvent = (
             return;
           }
 
-          query.leftJoin(
+          query.innerJoin(
             `"${table}" as "${tAlias}"`,
             `"${tAlias}"."${schema.column}"`,
             `"${tableAlias}"."${overrideColumn ?? schema.referencesColumn}"`,
@@ -168,7 +168,7 @@ export const getRootIdsFromEvent = (
           const tableAlias = tableAliasCache.getAlias(table);
 
           onFind({
-            query: new QueryBuilder()
+            query: new QueryBuilder<{id: unknown}>()
               .from(`"${table}" as "${tableAlias}"`)
               .whereIn(`"${tableAlias}"."${schema.column}"`, [
                 event.data?.[schema.referencingColumn],
@@ -217,7 +217,7 @@ export const getRootIdsFromEvent = (
 
           const tAlias = tableAliasCache.getAlias(table);
 
-          query.leftJoin(
+          query.innerJoin(
             `"${table}" as "${tAlias}"`,
             `"${tAlias}"."${schema.column}"`,
             `"${tableAlias}"."${overrideColumn ?? schema.referencingColumn}"`,
