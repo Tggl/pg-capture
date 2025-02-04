@@ -78,3 +78,29 @@ export interface IdsSet {
   delete(ids: unknown[]): void | Promise<void>;
   getAll(): AsyncGenerator<unknown[]> | Generator<unknown[]>;
 }
+
+export type ColumnOutput = {
+  type: 'column';
+  table: string;
+  column: string;
+};
+
+export type ObjectOutput = {
+  type: 'object';
+  properties: Record<string, SchemaOutput>;
+};
+
+export type ArrayOutput = {
+  type: 'array';
+  items: ColumnOutput | ObjectOutput;
+};
+
+export type SchemaOutput = ColumnOutput | ObjectOutput | ArrayOutput;
+
+export type IntrospectionResult = {
+  tables: {
+    table: string;
+    columns: string[];
+  }[];
+  output: SchemaOutput;
+};

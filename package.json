@@ -14,6 +14,9 @@
     "preversion": "npm test && npm run clean && npm run compile",
     "postversion": "git push && git push --tags"
   },
+  "engines": {
+    "node": ">=12.0.0"
+  },
   "type": "module",
   "sideEffects": false,
   "author": "",

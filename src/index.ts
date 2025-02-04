@@ -3,3 +3,4 @@ export {QueryBuilder} from './QueryBuilder';
 export {getRootIdsFromEvent} from './getRootIdsFromEvent';
 export {buildSchemaQuery} from './buildSchemaQuery';
 export {EventAggregator} from './EventAggregator';
+export {introspection} from './introspection';

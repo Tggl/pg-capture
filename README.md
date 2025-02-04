@@ -1,8 +1,8 @@
 # pg-capture
 
-A modular CDC (Change Data Capture) utility for PostgreSQL. Works on top of the logical replication feature to generate high level events from a schema.
+A lightweight and modular CDC (Change Data Capture) utility for PostgreSQL. Works on top of the logical replication feature to generate high level events from a schema.
 
-`pg-capture` is like having WAL (Write Ahead Log) events on an SQL view.
+`pg-capture` is like having WAL (Write Ahead Log) events but on an SQL view.
 
 - Aggregate low level events on tables (insert, update, and delete) into high level events on schemas (object upsert or delete)
 - Use PG as your single source of truth
@@ -114,7 +114,7 @@ Note that no matter which table is updated (in our case, either `book` or `autho
 Here are all the steps that happen when an event is handled by the aggregator:
 
 ### 1. `handleEvent` is called with a low level event
-It is you job to call the `handleEvent` method with all the low level events that happen on your tables. The goal of this method is to understand if the event might impact the schema by traversing the tree and comparing the event with each node.
+It is your job to call the `handleEvent` method with all the low level events that happen on your tables. The goal of this method is to understand if the event might impact the schema by traversing the tree and comparing the event with each node.
 
 ```typescript
 await aggregator.handleEvent({
@@ -132,7 +132,7 @@ await aggregator.handleEvent({
 ```
 
 ### 2. The list of root ids is fetched
-The `handleEvent` method tries to determine if the event might impact the schema, if it does, it tries to find the id of the root table. 
+The `handleEvent` method tries to determine if the event might impact the schema, if it does, it tries to find the id of the root table (ie. the books table). 
 
 Here if we update a book it will simply use the id of said book, and if we update an author it will use the id of the author to find the books that are impacted by the update.
 
@@ -330,3 +330,93 @@ WHERE "book_1"."id" IN ($1, $2)
 ```
 
 If the query returns a result for a given id, then the object was upserted. If the query returns no result, then the object was deleted.
+
+ ## How to capture WAL events
+
+This utility does not capture WAL events. You must use an external tool to capture those events and forward them to the `handleEvent` method. Some known solutions are:
+- [pg-logical-replication](https://www.npmjs.com/package/pg-logical-replication)
+- [wal-listener](https://github.com/ihippik/wal-listener)
+- [debezium](https://debezium.io/)
+
+Simply make sur that all relevant tables use `REPLICA IDENTITY FULL` for the event to cary both the new and previous values for each column. (See following section on introspection)
+
+ ## Introspecting schemas
+
+You can introspect a schema by calling the `introspection` function:
+
+```typescript
+import { introspection, IntrospectionResult } from 'pg-captur';
+
+const schema = {
+  table: 'users',
+  primaryKey: 'id',
+  schema: {
+    type: 'object',
+    properties: {
+      name: {
+        type: 'column',
+        column: 'name',
+      },
+      organizationNames: {
+        type: 'one-to-many',
+        column: 'id',
+        referencingTable: 'userToOrganization',
+        referencingColumn: 'userId',
+        schema: {
+          type: 'many-to-one',
+          column: 'organizationId',
+          referencesTable: 'organizations',
+          referencesColumn: 'id',
+          hasFKConstraint: true,
+          schema: {
+            type: 'column',
+            column: 'name',
+          },
+        },
+      },
+    },
+  },
+};
+
+const result: IntrospectionResult = introspection(schema);
+
+// Given the schema above, will output this result 👇
+const result = {
+  tables: [
+    {
+      table: 'users',
+      columns: ['id', 'name'],
+    },
+    {
+      table: 'organizations',
+      columns: ['name', 'id'],
+    },
+    {
+      table: 'userToOrganization',
+      columns: ['organizationId', 'userId'],
+    },
+  ],
+  output: {
+    type: 'object',
+    properties: {
+      name: {
+        type: 'column',
+        table: 'users',
+        column: 'name',
+      },
+      organizationNames: {
+        type: 'array',
+        items: {
+          type: 'column',
+          table: 'organizations',
+          column: 'name',
+        },
+      },
+    },
+  },
+}
+```
+
+The `tables` key contains the list of tables that are used by the schema. All those tables should have a `REPLICA IDENTITY FULL` in Postgres. It can be used to filter WAL events if needed.
+
+The `output` key contains the schema that will be outputted. You can use it to generate typeScript types or any other type related actions.
