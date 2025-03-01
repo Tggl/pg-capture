@@ -3,6 +3,21 @@
   "version": "0.4.0",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "description": "Schema based Chage-Date-Capture for PostgreSQL",
+  "author": "Nicolas Keller (https://github.com/nick-keller)",
+  "repository": "Tggl/pg-capture",
+  "homepage": "https://pg-capture.onrender.com/",
+  "keywords": [
+    "react",
+    "reactjs",
+    "spreadsheet",
+    "grid",
+    "datasheet",
+    "excel",
+    "airtable",
+    "notion",
+    "table"
+  ],
   "scripts": {
     "test": "jest",
     "lint": "gts lint",
@@ -19,9 +34,7 @@
   },
   "type": "module",
   "sideEffects": false,
-  "author": "",
   "license": "ISC",
-  "description": "",
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/node": "^22.7.5",

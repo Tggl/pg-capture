@@ -5,15 +5,15 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'PG-Capture',
   tagline: 'Schema-based Change-Data-Capture for Postgres',
-  favicon: 'img/favicon.ico',
-  url: 'https://your-docusaurus-site.example.com',
+  favicon: 'img/favicon.png',
+  url: 'https://pg-capture.onrender.com/',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'tggl', // Usually your GitHub org/user name.
+  organizationName: 'Tggl', // Usually your GitHub org/user name.
   projectName: 'pg-capture', // Usually your repo name.
 
   onBrokenLinks: 'throw',
