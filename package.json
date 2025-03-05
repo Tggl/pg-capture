@@ -34,7 +34,7 @@
   },
   "type": "module",
   "sideEffects": false,
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/node": "^22.7.5",
