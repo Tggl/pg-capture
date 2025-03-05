@@ -79,6 +79,11 @@ const config: Config = {
           label: 'GitHub',
           position: 'right',
         },
+        {
+          href: 'https://www.npmjs.com/package/pg-capture',
+          label: 'NPM',
+          position: 'right',
+        },
       ],
     },
     footer: {
@@ -102,7 +107,11 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/facebook/docusaurus',
+              href: 'https://github.com/Tggl/pg-capture',
+            },
+            {
+              label: 'NPM',
+              href: 'https://www.npmjs.com/package/pg-capture',
             },
           ],
         },
