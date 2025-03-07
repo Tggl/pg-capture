@@ -113,6 +113,11 @@ const config: Config = {
               label: 'NPM',
               href: 'https://www.npmjs.com/package/pg-capture',
             },
+            {
+              label: 'Tggl: Feature flags for collaboration',
+              to: 'https://tggl.io',
+              rel: '',
+            },
           ],
         },
       ],
