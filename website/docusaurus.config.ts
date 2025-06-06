@@ -118,6 +118,11 @@ const config: Config = {
               to: 'https://tggl.io',
               rel: '',
             },
+            {
+              label: 'RabbitGUI: RabbitMQ desktop app',
+              to: 'https://rabbitgui.com/',
+              rel: '',
+            },
           ],
         },
       ],
